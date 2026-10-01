@@ -1,0 +1,14 @@
+gateways:
+  default:
+    port: 3000
+
+mcp:
+  gateways:
+    - default
+  statefulMode: stateless
+  targets:
+    - name: stateless-mcp-demo
+      mcp:
+        host: stateless-mcp-demo.stateless-mcp-scale.svc.cluster.local
+        port: 8080
+        path: /

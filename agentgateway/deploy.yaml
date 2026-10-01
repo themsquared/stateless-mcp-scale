@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agentgateway-config
+  namespace: stateless-mcp-scale
+data:
+  agentgateway.yaml: |
+    gateways:
+      default:
+        port: 3000
+
+    mcp:
+      gateways:
+        - default
+      statefulMode: stateless
+      targets:
+        - name: stateless-mcp-demo
+          mcp:
+            host: stateless-mcp-demo.stateless-mcp-scale.svc.cluster.local
+            port: 8080
+            path: /
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentgateway
+  namespace: stateless-mcp-scale
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agentgateway
+  template:
+    metadata:
+      labels:
+        app: agentgateway
+    spec:
+      containers:
+        - name: agentgateway
+          image: cr.agentgateway.dev/agentgateway:v1.5.0
+          imagePullPolicy: IfNotPresent
+          args: ["-f", "/config/agentgateway.yaml"]
+          ports:
+            - containerPort: 3000
+              name: mcp
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          configMap:
+            name: agentgateway-config
+---
+# Deliberately a PLAIN ClusterIP-backed NodePort with no sessionAffinity set
+# (the default is sessionAffinity: None). Under the pre-2026-07-28 stateful
+# MCP model this demo would have needed `sessionAffinity: ClientIP` here (or
+# a cookie-based affinity in front of agentgateway) to keep one client pinned
+# to one backend replica for the life of its session. It is intentionally
+# absent: the new spec is what makes that unnecessary.
+apiVersion: v1
+kind: Service
+metadata:
+  name: agentgateway
+  namespace: stateless-mcp-scale
+spec:
+  type: NodePort
+  selector:
+    app: agentgateway
+  ports:
+    - name: mcp
+      port: 3000
+      targetPort: 3000
+      nodePort: 30080
