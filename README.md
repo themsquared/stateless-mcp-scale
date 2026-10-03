@@ -1,5 +1,7 @@
 # stateless-mcp-scale
 
+> 📖 **Read the write-up:** [Stateless MCP on Kubernetes: No More Sticky Sessions](https://webofmike.com/stateless-mcp-scale/)
+
 **Three replicas of a real MCP server, fronted by [agentgateway](https://agentgateway.dev), with no session affinity configured anywhere. A four-call shopping-cart session completes correctly across three different replicas, including mid-session through a full rolling restart, because the 2026-07-28 MCP spec revision moved session state out of the server process and into the request.**
 
 This reproduces the practical Kubernetes consequence of the MCP [2026-07-28 spec revision](https://blog.modelcontextprotocol.io/posts/2026-07-28/), the one [Simon Willison wrote about](https://simonwillison.net/2026/Jul/31/stateless-mcp/) ([386 points on Hacker News](https://news.ycombinator.com/item?id=49131438)) the same week [agentgateway shipped support for it in v1.4.0](https://github.com/agentgateway/agentgateway/releases/tag/v1.4.0).
